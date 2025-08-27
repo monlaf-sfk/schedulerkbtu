@@ -56,7 +56,7 @@ const LandingPage: React.FC = () => {
         <div className="mb-8 flex justify-center">
           <button
             className="p-2 rounded-full bg-blue-900 hover:bg-blue-700 transition border border-blue-700 shadow-lg"
-            onClick={() => window.open('https://github.com/monlaf-sfk', '_blank')}
+            onClick={() => window.open('https://github.com/monlaf-sfk/schedulerkbtu', '_blank')}
             aria-label="GitHub"
           >
             <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24">
