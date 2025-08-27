@@ -62,7 +62,6 @@ export const getCourseByCode = async (req: Request, res: Response) => {
     }
 };
 
- г
 export const triggerScraping = async (req: Request, res: Response) => {
     const { year, semester, code } = req.body;
 

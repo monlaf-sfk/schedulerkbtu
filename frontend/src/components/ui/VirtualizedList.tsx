@@ -12,7 +12,6 @@ interface VirtualizedCourseListProps {
 
 interface ItemData {
   courses: any[];
-  onCourseSelect: (course: any) => void;
   renderItem: (course: any) => React.ReactNode;
   selectedCourseId?: string;
 }
@@ -22,17 +21,12 @@ const VirtualizedItem = memo(({ index, style, data }: {
   style: React.CSSProperties;
   data: ItemData;
 }) => {
-  const { courses, onCourseSelect, renderItem } = data;
+  const { courses, renderItem } = data;
   const course = courses[index];
 
   return (
     <div style={style}>
-      <div 
-        onClick={() => onCourseSelect(course)}
-        className="cursor-pointer"
-      >
-        {renderItem(course)}
-      </div>
+      {renderItem(course)}
     </div>
   );
 });
@@ -43,13 +37,11 @@ export const VirtualizedCourseList: React.FC<VirtualizedCourseListProps> = memo(
   courses,
   height,
   itemHeight,
-  onCourseSelect,
   renderItem,
   selectedCourseId
 }) => {
   const itemData: ItemData = {
     courses,
-    onCourseSelect,
     renderItem,
     selectedCourseId
   };

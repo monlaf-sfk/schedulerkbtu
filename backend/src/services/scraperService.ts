@@ -109,8 +109,8 @@ async function parseScheduleView(page: any): Promise<any[]> {
 
 // Основная функция, которую будет вызывать наш контроллер
 export const scrapeAndSaveCourse = async (year: string, semester: string, courseCode: string) => {
-    const LOGIN = process.env.LOGIN;
-    const PASSWORD = process.env.PASSWORD;
+    const LOGIN = process.env.LOGIN ?? "";
+    const PASSWORD = process.env.PASSWORD ?? "";
     const BASE_URL = "https://wsp.kbtu.kz/";
     const SCHEDULE_URL = "https://wsp.kbtu.kz/SubjectSchedule";
     const LANDING_PAGE_AFTER_LOGIN = "**/News**";

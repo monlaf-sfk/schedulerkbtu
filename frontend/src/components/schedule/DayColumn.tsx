@@ -23,7 +23,7 @@ export const DayColumn: React.FC<DayColumnProps> = React.memo(({ title, sections
     });
     
     // Для каждой секции находим пересекающиеся с ней
-    sortedSections.forEach((section, index) => {
+  sortedSections.forEach((section) => {
       const startTime = parseInt(section.time.split(':')[0]);
       const endTime = startTime + (section.duration || 1);
       
