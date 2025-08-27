@@ -1,0 +1,39 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Модель для курса
+model Course {
+  id        Int      @id @default(autoincrement())
+  code      String   @unique // Шифр курса, например CSCI2104
+  name      String   // Название на английском
+  credits   Int
+  formula   String
+  year      String
+  period    String
+  // Связь: один курс имеет много секций
+  sections  Section[]
+}
+
+// Модель для секции (лекция, практика)
+model Section {
+  id        Int      @id @default(autoincrement())
+  type      String   // "Лекция", "Практика", "Лабораторная"
+  day       String   // День недели ("Пн", "Вт"...)
+  time      String   // Время начала ("09:00", "14:00"...)
+  duration  Int      @default(1) // Продолжительность в часах
+  teacher   String
+  room      String
+  
+  // Связь: эта секция принадлежит одному курсу
+  course    Course   @relation(fields: [courseId], references: [id])
+  courseId  Int
+}

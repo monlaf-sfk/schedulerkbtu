@@ -1,0 +1,6 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="8" y="16" width="48" height="40" rx="8" fill="#1e40af"/>
+  <rect x="8" y="16" width="48" height="10" rx="2" fill="#2563eb"/>
+  <rect x="16" y="32" width="32" height="16" rx="4" fill="#3b82f6"/>
+  <text x="32" y="44" text-anchor="middle" font-weight="bold" font-size="14" fill="white" font-family="sans-serif">KBTU</text>
+</svg>
