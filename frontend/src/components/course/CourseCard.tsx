@@ -40,8 +40,12 @@ export const CourseCard: React.FC<CourseCardProps> = React.memo(({ section, colu
   const duration = section.duration || 1;  
   const top = (timeStart - START_HOUR) * HOUR_HEIGHT_PIXELS + HEADER_OFFSET;
   const height = duration * HOUR_HEIGHT_PIXELS;
-  const width = 100 / totalColumns;
-  const left = columnIndex * width;
+  let width = '100%';
+  let left = '0';
+  if (totalColumns > 1) {
+    width = `${100 / totalColumns}%`;
+    left = `${(100 / totalColumns) * columnIndex}%`;
+  } 
   if (isNaN(timeStart)) return null;
   const isVacant = section.teacher === "N/A";
   const displayText = {
@@ -82,8 +86,8 @@ export const CourseCard: React.FC<CourseCardProps> = React.memo(({ section, colu
       style={{
         top: `${top}px`,
         height: `${height - 4}px`,
-        width: `calc(${width}% - 4px)`,
-        left: `${left}%`,
+    width,
+    left,
         marginLeft: '2px',
         boxShadow: isSelected
           ? '0 8px 20px -5px rgba(16, 185, 129, 0.25)'
