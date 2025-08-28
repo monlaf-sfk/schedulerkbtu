@@ -12,10 +12,23 @@ const HOST = process.env.HOST || '0.0.0.0';
 const API_HOST = process.env.API_HOST || '';
 const PUBLIC_URL = process.env.PUBLIC_URL || (API_HOST ? (API_HOST.startsWith('http') ? `${API_HOST}:${PORT}` : `http://${API_HOST}:${PORT}`) : `http://localhost:${PORT}`);
 
-const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'https://schedulerkbtu.vercel.app';
-app.set('trust proxy', true); // when running behind nginx / reverse proxy
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || process.env.FRONTEND_URL || 'https://schedulerkbtu.vercel.app';
+app.set('trust proxy', true);  
+
+const allowedOrigins = Array.from(new Set([
+  FRONTEND_ORIGIN,
+  PUBLIC_URL,
+  'http://localhost:5173', 
+])).filter(Boolean);
+
+console.log('CORS allowed origins:', allowedOrigins);
+
 app.use(cors({
-  origin: FRONTEND_ORIGIN,
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error(`CORS policy: origin ${origin} is not allowed`));
+  },
   credentials: true,
 }));
 app.use(express.json());
