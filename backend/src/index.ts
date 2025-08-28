@@ -12,7 +12,12 @@ const HOST = process.env.HOST || '0.0.0.0';
 const API_HOST = process.env.API_HOST || '';
 const PUBLIC_URL = process.env.PUBLIC_URL || (API_HOST ? (API_HOST.startsWith('http') ? `${API_HOST}:${PORT}` : `http://${API_HOST}:${PORT}`) : `http://localhost:${PORT}`);
 
-app.use(cors());
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'https://schedulerkbtu.vercel.app';
+app.set('trust proxy', true); // when running behind nginx / reverse proxy
+app.use(cors({
+  origin: FRONTEND_ORIGIN,
+  credentials: true,
+}));
 app.use(express.json());
 app.use(morgan('dev'));
 
