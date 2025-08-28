@@ -131,15 +131,16 @@ export const scrapeAndSaveCourse = async (year: string, semester: string, course
       try {
         console.log('1. Авторизация...');
         await page.goto(BASE_URL);
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(5000);
         const loginIcon = page.locator('div[role="button"]:has(img[src*="login_24.png"])');
         await loginIcon.click({ force: true });
         await page.getByLabel('Пользователь').fill(LOGIN);
         await page.getByLabel('Пароль').fill(PASSWORD);
         const loginButton = page.getByRole('button', { name: 'Вход' });
+        await page.waitForTimeout(5000);
         await loginButton.hover();
         await loginButton.click();
-
+        await page.waitForTimeout(5000);
         const waitForLanding = async () => {
           try {
             await page.waitForURL(LANDING_PAGE_AFTER_LOGIN, { timeout: LOGIN_TIMEOUT_MS });
@@ -170,11 +171,11 @@ export const scrapeAndSaveCourse = async (year: string, semester: string, course
 
         await waitForLanding();
         console.log('   Успешно!');
-
+        await page.waitForTimeout(5000);
         console.log(`2. Ищем курс ${courseCode} за ${year}, ${semester} семестр...`);
         await page.goto(SCHEDULE_URL);
         await page.waitForSelector('div.v-table-body', { timeout: 15000 });
-
+        await page.waitForTimeout(5000);
         const comboboxes = page.locator('div[role="combobox"]');
         await comboboxes.first().locator('.v-filterselect-button').click();
         await page.locator('span', { hasText: year }).click();
