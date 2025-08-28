@@ -7,7 +7,10 @@ import morgan from 'morgan'
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5001;
+const PORT = Number(process.env.PORT) || 5001;
+const HOST = process.env.HOST || '0.0.0.0';
+const API_HOST = process.env.API_HOST || '';
+const PUBLIC_URL = process.env.PUBLIC_URL || (API_HOST ? (API_HOST.startsWith('http') ? `${API_HOST}:${PORT}` : `http://${API_HOST}:${PORT}`) : `http://localhost:${PORT}`);
 
 app.use(cors());
 app.use(express.json());
@@ -16,6 +19,7 @@ app.use(morgan('dev'));
  
 app.use('/api', courseRoutes);
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server is running on http://localhost:${PORT}`);
+const server = app.listen(PORT, HOST, () => {
+  console.log(`🚀 Server is listening on ${HOST}:${PORT}`);
+  console.log(`🔗 Public URL (for clients): ${PUBLIC_URL}`);
 });
