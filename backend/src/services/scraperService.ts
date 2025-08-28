@@ -124,7 +124,8 @@ export const scrapeAndSaveCourse = async (year: string, semester: string, course
     page = await browser.newPage();
     page.setDefaultTimeout(20_000);
 
-    const timeoutMs = Number(process.env.SCRAPE_TIMEOUT_MS) || 70_000;
+  const timeoutMs = Number(process.env.SCRAPE_TIMEOUT_MS) || 70_000;
+  const LOGIN_TIMEOUT_MS = Number(process.env.LOGIN_TIMEOUT_MS) || 30_000;
 
     const result = await withTimeout((async () => {
       try {
@@ -138,7 +139,36 @@ export const scrapeAndSaveCourse = async (year: string, semester: string, course
         const loginButton = page.getByRole('button', { name: 'Вход' });
         await loginButton.hover();
         await loginButton.click();
-        await page.waitForURL(LANDING_PAGE_AFTER_LOGIN, { timeout: 10000 });
+
+        const waitForLanding = async () => {
+          try {
+            await page.waitForURL(LANDING_PAGE_AFTER_LOGIN, { timeout: LOGIN_TIMEOUT_MS });
+            return;
+          } catch (e) {
+            try {
+              await page.waitForNavigation({ timeout: LOGIN_TIMEOUT_MS, waitUntil: 'load' });
+            } catch (navErr) {
+            }
+            const fallbackSelectors = [
+              'div.v-menubar', // top menu
+              'div.v-table-body', // schedule table
+              'span:has-text("Расписание")',
+            ];
+
+            for (const sel of fallbackSelectors) {
+              try {
+                await page.waitForSelector(sel, { timeout: 5000 });
+                return;
+              } catch (_) {
+                // try next
+              }
+            }
+
+            throw e;
+          }
+        };
+
+        await waitForLanding();
         console.log('   Успешно!');
 
         console.log(`2. Ищем курс ${courseCode} за ${year}, ${semester} семестр...`);
