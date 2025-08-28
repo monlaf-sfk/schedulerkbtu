@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
+import api from './utils/api';
 import { Routes, Route } from 'react-router-dom';
 import { Header, Sidebar } from './components/layout';
 import { ScheduleGrid, ScheduleFilters } from './components/schedule';
@@ -9,6 +10,7 @@ import { useLocalStorage } from './hooks/useLocalStorage';
 import { resetColorAssignments } from './utils/colors';
 import type { CourseData, EnrichedSection } from './types';
 import LandingPage from './components/LandingPage';
+
 
 interface AppState {
   readonly isModalOpen: boolean;
@@ -92,13 +94,9 @@ function BuilderApp() {
     setState(prev => ({ ...prev, isLoading: true }));
     
     try {
-      const axios = (await import('axios')).default;
-      const coursePromises = selectedCodes.map(code =>
-        axios.get(`http://localhost:5001/api/courses/${code}`)
-      );
-      
+      const coursePromises = selectedCodes.map(code => api.get(`/api/courses/${code}`));
       const responses = await Promise.all(coursePromises);
-      const coursesData = responses.map(res => res.data);
+        const coursesData = responses.map(res => res.data);
       
       // Сбрасываем назначения цветов при изменении курсов
       resetColorAssignments();

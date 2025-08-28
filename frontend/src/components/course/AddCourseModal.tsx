@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import api from '../../utils/api';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X, Search, Loader2 } from 'lucide-react';
 import { VirtualizedCourseList } from '../ui/VirtualizedList';
@@ -48,12 +49,10 @@ export const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose,
   const [isScraping, setIsScraping] = useState(false);
   const [scrapeError, setScrapeError] = useState<string | null>(null);
 
+
   useEffect(() => {
     if (isOpen) {
-      import('axios').then(axios => {
-        axios.default.get('http://localhost:5001/api/courses')
-          .then(res => setAllCourses(res.data));
-      });
+      api.get('/api/courses').then(res => setAllCourses(res.data));
     }
     const initialSelected: Record<string, boolean> = {};
     alreadySelectedCodes.forEach(code => {
@@ -81,10 +80,9 @@ export const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose,
     const courseCode = searchTerm.toUpperCase();
 
     try {
-      const axios = (await import('axios')).default;
-      //const { academicYear, semester } = getCurrentAcademicYearAndSemester();
-      //console.log("Запрос на скрапинг:", { academicYear, semester, code: courseCode });
-      const response = await axios.post('http://localhost:5001/api/scrape', {
+  //const { academicYear, semester } = getCurrentAcademicYearAndSemester();
+  //console.log("Запрос на скрапинг:", { academicYear, semester, code: courseCode });
+  const response = await api.post('/api/scrape', {
         year: "2025-2026",
         semester: "Осенний",
         code: courseCode,
