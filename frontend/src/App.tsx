@@ -6,6 +6,7 @@ import { ScheduleGrid, ScheduleFilters } from './components/schedule';
 import { AddCourseModal } from './components/course';
 import { ScheduleComparison, ScheduleExport } from './components/schedule';
 import { useScheduleManager } from './hooks/useScheduleManager';
+import { useFilterState } from './hooks/useFilterState';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { resetColorAssignments } from './utils/colors';
 import type { CourseData, EnrichedSection } from './types';
@@ -31,31 +32,37 @@ const INITIAL_STATE: AppState = {
 function BuilderApp() {
   const [state, setState] = useState<AppState>(INITIAL_STATE);
   const [selectedCourses, setSelectedCourses] = useLocalStorage<CourseData[]>('selected_courses', []);
-  const [hiddenCourseCodes, setHiddenCourseCodes] = useState<string[]>([]);
-  const [filteredSections, setFilteredSections] = useState<EnrichedSection[]>([]);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-
-  const handleFiltersChange = useCallback((sections: EnrichedSection[]) => {
-    setFilteredSections(sections);
-  }, []);
 
   const openFilterModal = useCallback(() => setIsFilterModalOpen(true), []);
   const closeFilterModal = useCallback(() => setIsFilterModalOpen(false), []);
 
- 
+
   useEffect(() => {
     console.log('Selected courses changed:', selectedCourses.length, selectedCourses.map(c => c.code));
   }, [selectedCourses]);
 
   // Memoized sections calculation
-  const allSections = useMemo((): EnrichedSection[] => 
-    selectedCourses.flatMap(course => 
+  const allSections = useMemo((): EnrichedSection[] =>
+    selectedCourses.flatMap(course =>
       course.sections.map(section => ({
         ...section,
         courseCode: course.code,
         courseName: course.name
       }))
     ), [selectedCourses]);
+
+  // Filter state management
+  const {
+    filterState,
+    hiddenCourses,
+    filteredSections,
+    filterOptions,
+    toggleFilter,
+    toggleCourseVisibility,
+    clearAllFilters,
+    hasActiveFilters
+  } = useFilterState(allSections);
 
   // Schedule management
   const {
@@ -73,14 +80,6 @@ function BuilderApp() {
     recommendations,
     applyRecommendation
   } = useScheduleManager(selectedCourses, allSections);
-  // Обработчик скрытия/показа курса
-  const handleToggleCourseVisibility = useCallback((courseCode: string) => {
-    setHiddenCourseCodes(prev =>
-      prev.includes(courseCode)
-        ? prev.filter(code => code !== courseCode)
-        : [...prev, courseCode]
-    );
-  }, []);
 
   useEffect(() => {
     if (schedules.length === 0) {
@@ -92,24 +91,24 @@ function BuilderApp() {
 
   const handleConfirmSelection = useCallback(async (selectedCodes: readonly string[]) => {
     setState(prev => ({ ...prev, isLoading: true }));
-    
+
     try {
       const coursePromises = selectedCodes.map(code => api.get(`/api/courses/${code}`));
       const responses = await Promise.all(coursePromises);
-        const coursesData = responses.map(res => res.data);
-      
+      const coursesData = responses.map(res => res.data);
+
       // Сбрасываем назначения цветов при изменении курсов
       resetColorAssignments();
-      
+
       // Сохраняем курсы в localStorage
       setSelectedCourses(coursesData);
-      
-      setState(prev => ({ 
-        ...prev, 
+
+      setState(prev => ({
+        ...prev,
         isModalOpen: false,
         isLoading: false
       }));
-    } catch (error) { 
+    } catch (error) {
       console.error("Ошибка загрузки курсов", error);
       setState(prev => ({ ...prev, isLoading: false }));
     }
@@ -119,7 +118,7 @@ function BuilderApp() {
     if (!activeSchedule) return;
 
     const newSelected = { ...selectedSectionIds };
-    
+
     if (newSelected[section.id]) {
       delete newSelected[section.id];
       updateActiveSchedule(newSelected);
@@ -134,7 +133,7 @@ function BuilderApp() {
 
     const selectedSections = allSections.filter(s => selectedSectionIds[s.id]);
     const [maxLectures = 0, maxLabs = 0, maxPractices = 0] = parentCourse.formula.split('/').map(Number);
-    
+
     const currentCounts = selectedSections
       .filter(s => s.courseCode === parentCourse.code)
       .reduce((acc, s) => {
@@ -157,8 +156,8 @@ function BuilderApp() {
       return;
     }
 
-    const conflictingSections = selectedSections.filter(s => 
-      s.day === section.day && 
+    const conflictingSections = selectedSections.filter(s =>
+      s.day === section.day &&
       s.time === section.time &&
       s.id !== section.id
     );
@@ -182,28 +181,28 @@ function BuilderApp() {
     resetColorAssignments();
   }, [activeSchedule, updateActiveSchedule]);
 
-  const openModal = useCallback(() => 
+  const openModal = useCallback(() =>
     setState(prev => ({ ...prev, isModalOpen: true })), []);
-  
-  const closeModal = useCallback(() => 
+
+  const closeModal = useCallback(() =>
     setState(prev => ({ ...prev, isModalOpen: false })), []);
 
-  const openComparison = useCallback(() => 
+  const openComparison = useCallback(() =>
     setState(prev => ({ ...prev, isComparisonOpen: true })), []);
-  
-  const closeComparison = useCallback(() => 
+
+  const closeComparison = useCallback(() =>
     setState(prev => ({ ...prev, isComparisonOpen: false })), []);
 
-  const openExport = useCallback((scheduleId: string) => 
+  const openExport = useCallback((scheduleId: string) =>
     setState(prev => ({ ...prev, exportScheduleId: scheduleId })), []);
-  
-  const closeExport = useCallback(() => 
+
+  const closeExport = useCallback(() =>
     setState(prev => ({ ...prev, exportScheduleId: null })), []);
 
-  const toggleFinalView = useCallback((value: boolean) => 
+  const toggleFinalView = useCallback((value: boolean) =>
     setState(prev => ({ ...prev, isFinalView: value })), []);
 
-  const exportSchedule = state.exportScheduleId 
+  const exportSchedule = state.exportScheduleId
     ? schedules.find(s => s.id === state.exportScheduleId)
     : null;
 
@@ -216,7 +215,7 @@ function BuilderApp() {
             <div className="text-white">Загрузка курсов...</div>
           </div>
         )}
-        <Sidebar 
+        <Sidebar
           selectedCourses={selectedCourses}
           onAddCourseClick={openModal}
           onResetClick={handleResetSchedule}
@@ -235,13 +234,13 @@ function BuilderApp() {
           allSections={allSections}
           recommendations={recommendations}
           onApplyRecommendation={applyRecommendation}
-          hiddenCourseCodes={hiddenCourseCodes}
-          onToggleCourseVisibility={handleToggleCourseVisibility}
+          hiddenCourseCodes={Array.from(hiddenCourses)}
+          onToggleCourseVisibility={toggleCourseVisibility}
         />
         <main className="flex-grow overflow-auto">
           <ScheduleGrid
-            courses={selectedCourses.filter(c => !hiddenCourseCodes.includes(c.code))}
-            allSections={filteredSections.length > 0 ? filteredSections : allSections.filter(s => !hiddenCourseCodes.includes(s.courseCode))}
+            courses={selectedCourses.filter(c => !hiddenCourses.has(c.code))}
+            allSections={filteredSections}
             selectedSectionIds={selectedSectionIds}
             onSectionSelect={handleSectionSelect}
             isFinalView={state.isFinalView}
@@ -260,7 +259,13 @@ function BuilderApp() {
               <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
             <div className="pt-2 pb-2">
-              <ScheduleFilters allSections={allSections} onFiltersChange={handleFiltersChange} />
+              <ScheduleFilters
+                filterState={filterState}
+                filterOptions={filterOptions}
+                onToggleFilter={toggleFilter}
+                onClearFilters={clearAllFilters}
+                hasActiveFilters={hasActiveFilters}
+              />
             </div>
           </div>
         </div>
@@ -304,4 +309,3 @@ function App() {
 
 export default App;
 
- 

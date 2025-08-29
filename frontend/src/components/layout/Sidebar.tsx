@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Button } from '../ui/Button';
 import { ScheduleManager } from '../schedule/ScheduleManager';
 import { CourseAnalysisPanel } from '../analysis/CourseAnalysisPanel';
 import { SmartRecommendations } from '../analysis/SmartRecommendations';
 import { CourseLegend } from '../course/CourseLegend';
-import { ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react';
+import { CourseItem } from '../course/CourseItem';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import type { 
   CourseData, 
   Schedule, 
@@ -156,46 +157,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 {expandedSections.courses ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               </button>
               {expandedSections.courses && (
-                <div className="space-y-2 ">
+                <div className="space-y-2">
                   {selectedCourses.length > 0 ? (
-                    selectedCourses.map(course => {
-                      const isHidden = hiddenCourseCodes.includes(course.code);
-                      // Проверка: выбраны ли все часы по предмету
-                      let isFullySelected = false;
-                      if (activeSchedule && course.sections && course.formula) {
-                        const selectedIds = activeSchedule.selectedSectionIds || {};
-                        const selectedSections = course.sections.filter(s => selectedIds[s.id]);
-                        const [maxLectures = 0, maxLabs = 0, maxPractices = 0] = course.formula.split('/').map(Number);
-                        const counts = selectedSections.reduce((acc, s) => {
-                          if (s.type === 'Лекция') acc.lectures++;
-                          else if (s.type === 'Лабораторная') acc.labs++;
-                          else if (s.type === 'Практика') acc.practices++;
-                          return acc;
-                        }, { lectures: 0, labs: 0, practices: 0 });
-                        isFullySelected = counts.lectures >= maxLectures && counts.labs >= maxLabs && counts.practices >= maxPractices;
-                      }
-                      return (
-                        <div
-                          key={course.code}
-                          className={`bg-gradient-to-r from-slate-800/60 to-slate-700/60 border border-slate-600/40 p-4 rounded-xl flex items-center justify-between transition-all duration-200 hover:border-slate-500/60 shadow-lg ${isHidden && isFullySelected ? 'opacity-60 border-2 border-emerald-500/70' : ''}`}
-                        >
-                          <div>
-                            <p className="font-bold text-white">{course.code}</p>
-                            <p className="text-sm text-slate-200 truncate">{course.name}</p>
-                            <p className="text-xs text-slate-300">{course.formula}</p>
-                          </div>
-                          {onToggleCourseVisibility && (
-                            <button
-                              title={isHidden ? 'Показать курс в расписании' : 'Скрыть курс из расписания'}
-                              onClick={() => onToggleCourseVisibility(course.code)}
-                              className="ml-2 p-2 rounded-lg hover:bg-slate-700/60 text-slate-400 hover:text-white transition-colors duration-200"
-                            >
-                              {isHidden ? <EyeOff size={20} /> : <Eye size={20} />}
-                            </button>
-                          )}
-                        </div>
-                      );
-                    })
+                    selectedCourses.map(course => (
+                      <CourseItem
+                        key={course.code}
+                        course={course}
+                        activeSchedule={activeSchedule}
+                        isHidden={hiddenCourseCodes.includes(course.code)}
+                        onToggleVisibility={onToggleCourseVisibility!}
+                      />
+                    ))
                   ) : (
                     <div className="text-center text-sm text-slate-300 py-4">
                       Курсы не выбраны

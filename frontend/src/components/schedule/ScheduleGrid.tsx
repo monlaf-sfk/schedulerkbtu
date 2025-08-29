@@ -1,61 +1,55 @@
+import React, { useMemo } from 'react';
 import { DayColumn } from "./DayColumn";
-import _ from 'lodash';
 import { canSelectSection } from "../../utils/schedule";
-import type { CourseData, Section} from "../../types";
-
-
-
-const dayMapping: { [key: string]: string } = {
-    "Понедельник": "Пн", 
-    "Вторник": "Вт", 
-    "Среда": "Ср", 
-    "Четверг": "Чт", 
-    "Пятница": "Пт", 
-    "Суббота": "Сб",
-    "Воскресенье": "Вс"
-};
-
-const days = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"];
 import { SCHEDULE_GRID } from '../../constants/schedule';
+import type { CourseData, EnrichedSection } from "../../types";
+
+const DAY_MAPPING: Record<string, string> = {
+  "Понедельник": "Пн", 
+  "Вторник": "Вт", 
+  "Среда": "Ср", 
+  "Четверг": "Чт", 
+  "Пятница": "Пт", 
+  "Суббота": "Сб",
+  "Воскресенье": "Вс"
+} as const;
+
+const DAYS = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"] as const;
 
 const { HOUR_HEIGHT_PIXELS, START_HOUR, END_HOUR, HEADER_OFFSET } = SCHEDULE_GRID;
 
 interface ScheduleGridProps {
-  courses: CourseData[];
-  allSections: (Section & { courseCode: string, courseName: string })[];
-  selectedSectionIds: Record<number, boolean>;
-  onSectionSelect: (section: Section & { courseCode: string, courseName: string }) => void;
-  isFinalView: boolean;
+  readonly courses: readonly CourseData[];
+  readonly allSections: readonly EnrichedSection[];
+  readonly selectedSectionIds: Readonly<Record<number, boolean>>;
+  readonly onSectionSelect: (section: EnrichedSection) => void;
+  readonly isFinalView: boolean;
 }
 
-export const ScheduleGrid: React.FC<ScheduleGridProps> = ({ courses, allSections, selectedSectionIds, onSectionSelect, isFinalView }) => {
-    
-    if (courses.length === 0) {
-        return (
-          <div className="flex items-center justify-center h-full text-center p-8">
-            <div className="bg-gradient-to-br from-slate-800/40 to-slate-900/60 border border-slate-600/30 rounded-3xl p-16 shadow-xl max-w-md">
-              <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-emerald-500/20 to-blue-500/20 rounded-2xl flex items-center justify-center border border-emerald-500/30">
-                <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <rect x="3" y="4" width="18" height="16" rx="2"/>
-                  <path d="M3 8h18"/>
-                  <path d="M8 12h8"/>
-                  <path d="M8 16h6"/>
-                </svg>
-              </div>
-              <h3 className="font-bold text-slate-200 text-xl mb-3">Расписание пусто</h3>
-              <p className="text-slate-400 text-sm leading-relaxed">
-                Добавьте курсы, чтобы начать создание вашего персонального расписания
-              </p>
-            </div>
-          </div>
-        );
-    }
+export const ScheduleGrid: React.FC<ScheduleGridProps> = ({ 
+  courses, 
+  allSections, 
+  selectedSectionIds, 
+  onSectionSelect, 
+  isFinalView 
+}) => {
+  // ВСЕ ХУКИ ДОЛЖНЫ БЫТЬ В НАЧАЛЕ КОМПОНЕНТА
+  
+  // Мемоизированные выбранные секции
+  const selectedSections = useMemo(() => 
+    allSections.filter(s => selectedSectionIds[s.id]),
+    [allSections, selectedSectionIds]
+  );
 
-    const selectedSections = allSections.filter(s => selectedSectionIds[s.id]);
-    
-    const sectionsToDisplay = isFinalView ? selectedSections : allSections;
-    
-    const enrichedSections = sectionsToDisplay.map(section => {
+  // Мемоизированные секции для отображения
+  const sectionsToDisplay = useMemo(() => 
+    isFinalView ? selectedSections : allSections,
+    [isFinalView, selectedSections, allSections]
+  );
+
+  // Мемоизированные обогащенные секции
+  const enrichedSections = useMemo(() => 
+    sectionsToDisplay.map(section => {
       const isSelected = !!selectedSectionIds[section.id];
       
       // Проверяем конфликты с учетом продолжительности
@@ -92,13 +86,57 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({ courses, allSections
         isConflicted: hasConflict,
         isDeactivated,
       };
-    });
-    
-    const hours = _.range(START_HOUR, END_HOUR + 1);
-    const gridHeight = (hours.length * HOUR_HEIGHT_PIXELS) + HEADER_OFFSET;
+    }),
+    [sectionsToDisplay, selectedSectionIds, selectedSections, courses]
+  );
 
-    // Проверяем есть ли многочасовые лекции
-    const hasMultiHourLectures = enrichedSections.some(s => s.type === 'Лекция' && s.duration >= 2);
+  // Мемоизированные часы и высота сетки
+  const hours = useMemo(() => 
+    Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_HOUR + i),
+    []
+  );
+  
+  const gridHeight = useMemo(() => 
+    (hours.length * HOUR_HEIGHT_PIXELS) + HEADER_OFFSET,
+    [hours.length]
+  );
+
+  // Проверяем есть ли многочасовые лекции
+  const hasMultiHourLectures = useMemo(() => 
+    enrichedSections.some(s => s.type === 'Лекция' && s.duration >= 2),
+    [enrichedSections]
+  );
+
+  // Мемоизированные секции по дням
+  const sectionsByDay = useMemo(() => 
+    DAYS.reduce((acc, day) => {
+      acc[day] = enrichedSections.filter(section => section.day === DAY_MAPPING[day]);
+      return acc;
+    }, {} as Record<string, typeof enrichedSections>),
+    [enrichedSections]
+  );
+
+  // Пустое состояние
+  if (courses.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full text-center p-8">
+        <div className="bg-gradient-to-br from-slate-800/40 to-slate-900/60 border border-slate-600/30 rounded-3xl p-16 shadow-xl max-w-md">
+          <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-emerald-500/20 to-blue-500/20 rounded-2xl flex items-center justify-center border border-emerald-500/30">
+            <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <rect x="3" y="4" width="18" height="16" rx="2"/>
+              <path d="M3 8h18"/>
+              <path d="M8 12h8"/>
+              <path d="M8 16h6"/>
+            </svg>
+          </div>
+          <h3 className="font-bold text-slate-200 text-xl mb-3">Расписание пусто</h3>
+          <p className="text-slate-400 text-sm leading-relaxed">
+            Добавьте курсы, чтобы начать создание вашего персонального расписания
+          </p>
+        </div>
+      </div>
+    );
+  }
 
     return (
       <div className="space-y-4">
@@ -150,14 +188,14 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({ courses, allSections
             </div>
             
             {/* Колонки дней */}
-            {days.map(day => {
-                const sectionsForDay = enrichedSections.filter(
-                    (section) => section.day === dayMapping[day]
-                );
-                return (
-                    <DayColumn key={day} title={day} sections={sectionsForDay} onSectionSelect={onSectionSelect}/>
-                );
-            })}
+            {DAYS.map(day => (
+              <DayColumn 
+                key={day} 
+                title={day} 
+                sections={sectionsByDay[day]} 
+                onSectionSelect={onSectionSelect}
+              />
+            ))}
           </div>
         </div>
       </div>

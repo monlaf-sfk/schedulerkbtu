@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
+import { useLocalStorage } from './useLocalStorage';
 import type { ExpandedSections } from '../types';
 
 interface UseUIStateReturn {
@@ -19,17 +20,17 @@ const DEFAULT_EXPANDED_SECTIONS: ExpandedSections = {
 export const useUIState = (
   initialState: Partial<ExpandedSections> = {}
 ): UseUIStateReturn => {
-  const [expandedSections, setExpandedSections] = useState<ExpandedSections>({
-    ...DEFAULT_EXPANDED_SECTIONS,
-    ...initialState
-  });
+  const [expandedSections, setExpandedSections] = useLocalStorage<ExpandedSections>(
+    'ui_expanded_sections',
+    { ...DEFAULT_EXPANDED_SECTIONS, ...initialState }
+  );
 
   const toggleSection = useCallback((section: keyof ExpandedSections) => {
     setExpandedSections(prev => ({
       ...prev,
       [section]: !prev[section]
     }));
-  }, []);
+  }, [setExpandedSections]);
 
   const expandAll = useCallback(() => {
     setExpandedSections(prev =>
@@ -38,7 +39,7 @@ export const useUIState = (
         [key]: true
       }), {} as ExpandedSections)
     );
-  }, []);
+  }, [setExpandedSections]);
 
   const collapseAll = useCallback(() => {
     setExpandedSections(prev =>
@@ -47,7 +48,7 @@ export const useUIState = (
         [key]: false
       }), {} as ExpandedSections)
     );
-  }, []);
+  }, [setExpandedSections]);
 
   return {
     expandedSections,
