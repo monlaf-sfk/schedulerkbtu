@@ -109,19 +109,16 @@ export const CourseCard: React.FC<CourseCardProps> = React.memo(({ section, colu
       
       {/* Информация о занятии */}
       <div className="space-y-0.5 flex-1">
-        <p className="text-xs text-white/90 leading-tight font-medium truncate">
+        <p className="text-xs text-white/90 leading-tight font-medium">
           {displayText.teacher}
         </p>
-        <p className="text-xs text-white/75 leading-tight truncate">
+        <p className="text-xs text-white/75 leading-tight ">
           {displayText.room}
         </p>
       </div>
       
       {/* Время и продолжительность */}
       <div className="flex justify-between items-center mt-1 pt-1 border-t border-white/10">
-        <span className="text-xs text-white/70 font-mono">
-          {section.time}
-        </span>
         {duration > 1 && (
           <span className="text-xs bg-black/25 px-1.5 py-0.5 rounded-md text-amber-300 font-semibold border border-amber-400/20">
             {duration}ч
