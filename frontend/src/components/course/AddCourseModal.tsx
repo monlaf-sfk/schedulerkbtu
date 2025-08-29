@@ -48,6 +48,7 @@ export const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose,
 
   const [isScraping, setIsScraping] = useState(false);
   const [scrapeError, setScrapeError] = useState<string | null>(null);
+  const [listHeight, setListHeight] = useState<number>(300);
 
 
   useEffect(() => {
@@ -60,6 +61,17 @@ export const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose,
     });
     setSelected(initialSelected);
   }, [isOpen, alreadySelectedCodes]);
+
+  useEffect(() => {
+    const compute = () => {
+      const vh = typeof window !== 'undefined' ? window.innerHeight : 800;
+      const estimated = Math.round(Math.max(180, Math.min(480, Math.floor(vh * 0.45))));
+      setListHeight(estimated);
+    };
+    compute();
+    window.addEventListener('resize', compute);
+    return () => window.removeEventListener('resize', compute);
+  }, []);
 
   const handleSelect = (code: string) => {
     setSelected(prev => ({ ...prev, [code]: !prev[code] }));
@@ -133,8 +145,8 @@ export const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose,
     <Dialog.Root open={isOpen} onOpenChange={onClose}>
       <Dialog.Portal>
         <Dialog.Overlay className="bg-black/70 fixed inset-0 z-40 animate-in fade-in-0 backdrop-blur-sm" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-br from-slate-900/98 to-slate-800/98 border border-slate-600/50 rounded-3xl shadow-2xl w-[90vw] max-w-2xl h-[70vh] z-50 flex flex-col animate-fade-in backdrop-blur-sm">
-          <header className="p-6 border-b border-slate-600/30 flex justify-between items-center flex-shrink-0 bg-gradient-to-r from-slate-900/60 to-slate-800/60 rounded-t-3xl">
+        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-br from-slate-900/98 to-slate-800/98 border border-slate-600/50 rounded-3xl shadow-2xl w-full sm:w-[90vw] max-w-2xl h-[80vh] md:h-[70vh] z-50 flex flex-col animate-fade-in backdrop-blur-sm">
+          <header className="p-4 sm:p-6 border-b border-slate-600/30 flex justify-between items-center flex-shrink-0 bg-gradient-to-r from-slate-900/60 to-slate-800/60 rounded-t-3xl">
             <Dialog.Title className="text-2xl font-bold text-slate-200">Добавить курсы</Dialog.Title>
             <Dialog.Close asChild>
               <button className="text-slate-400 hover:text-white p-2 rounded-full bg-slate-800/70 hover:bg-slate-700/70 transition-all duration-200 border border-slate-600/40">
@@ -143,7 +155,7 @@ export const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose,
             </Dialog.Close>
           </header>
 
-          <div className="p-6 flex-shrink-0">
+          <div className="p-4 sm:p-6 flex-shrink-0">
             <div className="relative">
               <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
@@ -155,12 +167,11 @@ export const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose,
               />
             </div>
           </div>
-
           <div className="flex-grow px-6">
             {filteredCourses.length > 0 ? (
               <VirtualizedCourseList
                 courses={filteredCourses}
-                height={300}
+                height={listHeight}
                 itemHeight={80}
                 onCourseSelect={(course) => handleSelect(course.code)}
                 renderItem={renderCourseItem}
