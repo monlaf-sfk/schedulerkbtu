@@ -25,12 +25,17 @@ export const ScheduleFilters: React.FC<ScheduleFiltersProps> = ({
   hasActiveFilters
 }) => {
 
-  const FilterSection: React.FC<{
+  const FilterSection = <T extends keyof FilterState>({
+    title,
+    icon,
+    items,
+    category
+  }: {
     title: string;
     icon: React.ReactNode;
     items: readonly string[];
-    category: keyof FilterState;
-  }> = ({ title, icon, items, category }) => (
+    category: T;
+  }) => (
     <div className="space-y-2">
       <div className="flex items-center gap-2 text-sm font-semibold text-gray-200 mb-1">
         {icon}
@@ -38,16 +43,15 @@ export const ScheduleFilters: React.FC<ScheduleFiltersProps> = ({
       </div>
       <div className="flex flex-wrap gap-2">
         {items.map(item => {
-          const isActive = filterState[category].has(item);
+          const isActive = (filterState[category] as ReadonlySet<string>).has(item);
           return (
             <button
               key={item}
               onClick={() => onToggleFilter(category, item)}
-              className={`px-3 py-1 rounded-full text-xs font-medium shadow transition-colors border focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                isActive
+              className={`px-3 py-1 rounded-full text-xs font-medium shadow transition-colors border focus:outline-none focus:ring-2 focus:ring-blue-500 ${isActive
                   ? 'bg-blue-600 text-white border-blue-600'
                   : 'bg-neutral-700 text-gray-300 hover:bg-blue-700 hover:text-white border-neutral-700'
-              }`}
+                }`}
             >
               {item}
             </button>

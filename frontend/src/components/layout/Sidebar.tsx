@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { Button } from '../ui/Button';
 import { ScheduleManager } from '../schedule/ScheduleManager';
 import { CourseAnalysisPanel } from '../analysis/CourseAnalysisPanel';
