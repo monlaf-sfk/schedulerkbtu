@@ -64,7 +64,7 @@ export const ScheduleFilters: React.FC<ScheduleFiltersProps> = ({
   // Modal-friendly layout
   return (
     <div className="w-full">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex items-center justify-start gap-4">
         <h2 className="text-xl font-bold text-white flex items-center gap-2">
           <Filter size={24} />
           Фильтры расписания
@@ -72,7 +72,7 @@ export const ScheduleFilters: React.FC<ScheduleFiltersProps> = ({
         {hasActiveFilters && (
           <button
             onClick={onClearFilters}
-            className="text-xs text-gray-400 hover:text-white flex items-center gap-1 px-3 py-1 rounded-lg transition-colors border border-transparent hover:border-blue-600 bg-neutral-800"
+            className="text-xs text-gray-400 hover:text-white flex items-center gap-1 px-3 py-4 rounded-lg transition-colors border border-transparent hover:border-blue-600 bg-neutral-800"
           >
             <X size={16} />
             Очистить
