@@ -11,7 +11,7 @@ interface ScheduleComparisonProps {
   readonly analyzeConflicts: (schedule: Schedule) => readonly ConflictInfo[];
 }
 
-const MAX_SCHEDULES_TO_COMPARE = 3;
+const MAX_SCHEDULES_TO_COMPARE = 2;
 const TIME_SLOTS = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'] as const;
 
 const SCHEDULE_COLORS = ['bg-blue-600', 'bg-green-600', 'bg-purple-600'] as const;
